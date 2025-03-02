@@ -5,7 +5,9 @@ var VSHADER_SOURCE = `
     precision mediump float;
     attribute vec4 a_Position;
     attribute vec2 a_UV;
+    attribute vec3 a_Normal;
     varying vec2 v_UV;
+    varying vec3 v_Normal;
     uniform mat4 u_ModelMatrix;
     uniform mat4 u_GlobalRotateMatrix;
     uniform mat4 u_ViewMatrix;
@@ -13,12 +15,14 @@ var VSHADER_SOURCE = `
     void main() {
         gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_GlobalRotateMatrix * u_ModelMatrix * a_Position;
         v_UV = a_UV;
+        v_Normal = a_Normal;
     }`;
 
 // Fragment shader program
 var FSHADER_SOURCE = `
     precision mediump float;
     varying vec2 v_UV;
+    varying vec3 v_Normal;
     uniform vec4 u_FragColor;
     uniform sampler2D u_Sampler0;
     uniform sampler2D u_Sampler1;
@@ -30,7 +34,9 @@ var FSHADER_SOURCE = `
     uniform int u_WhichTexture;
     void main() {
         
-        if (u_WhichTexture == -2) {
+        if (u_WhichTexture == -3) {
+            gl_FragColor = vec4((v_Normal+1.0)/2.0, 1.0);      // Normal For Color
+        } else if (u_WhichTexture == -2) {
             gl_FragColor = u_FragColor;                     // Use Color
         } else if (u_WhichTexture == -1) {
             gl_FragColor = vec4(v_UV, 1, 1);                // Use UV debug color
@@ -54,6 +60,7 @@ let canvas;
 let gl;
 let a_Position;
 let a_UV;
+let a_Normal;
 let u_FragColor;
 let u_Size;
 let u_ModelMatrix;
@@ -66,6 +73,7 @@ let u_Sampler2;
 let u_Sampler3;
 let u_Sampler4;
 let u_WhichTexture;
+let u_lightPos;
 
 // Setup GL context
 function setupWebGL(){
@@ -108,6 +116,13 @@ function connectVariablesToGLSL(){
     // Get the storage location of a_UV
     a_UV = gl.getAttribLocation(gl.program, 'a_UV');
     if (a_UV < 0) {
+        console.log('Failed to get the storage location of a_UV');
+        return;
+    }
+
+    // Get the storage location of a_Normal
+    a_Normal = gl.getAttribLocation(gl.program, 'a_Normal');
+    if (a_Normal < 0) {
         console.log('Failed to get the storage location of a_UV');
         return;
     }
@@ -236,6 +251,8 @@ let g_udderAngle = 0;
 let g_udderAnimation = false;
 let g_aspectScalar = 1;
 let g_mouseRotationScalar = 1;
+let g_normalOn = false;
+let g_lightPos = [0,1,-2];
 
 // Set up actions for the HTML UI elements
 function addActionsForHtmlUI(){
@@ -247,6 +264,8 @@ function addActionsForHtmlUI(){
     // }
 
     // Button Events
+    document.getElementById('normalOn').onclick = function() {g_normalOn=true};
+    document.getElementById('normalOff').onclick = function() {g_normalOn=false};
     document.getElementById('animationYellowOffButton').onclick = function() {g_yellowAnimation=false;};
     document.getElementById('animationYellowOnButton').onclick = function() {g_yellowAnimation=true;};
     document.getElementById('animationMagentaOffButton').onclick = function() {g_magentaAnimation=false;};
@@ -292,6 +311,11 @@ function addActionsForHtmlUI(){
     document.getElementById('aspectScalar').addEventListener('mousemove', function() { g_aspectScalar = this.value; renderAllShapes(); mouseReset(); } );
 
     document.getElementById('mouseRotationScalar').addEventListener('mousemove', function() { g_mouseRotationScalar = this.value; renderAllShapes(); mouseReset(); } );
+    
+    document.getElementById('lightX').addEventListener('mousemove', function(ev) {if(ev.buttons==1) {g_lightPos[0] = this.value/100; renderAllShapes();}});
+    document.getElementById('lightY').addEventListener('mousemove', function(ev) {if(ev.buttons==1) {g_lightPos[1] = this.value/100; renderAllShapes();}});
+    document.getElementById('lightZ').addEventListener('mousemove', function(ev) {if(ev.buttons==1) {g_lightPos[2] = this.value/100; renderAllShapes();}});
+    
     // document.getElementById('aspectScalar').addEventListener('mousemove', function() { g_aspectScalar = this.value; renderAllShapes(); mouseReset(); } );
     // // Size + Segments Slider Events
     // document.getElementById('sizeSlide').addEventListener('mouseup', function() { g_selectedSize = this.value; })
@@ -665,6 +689,10 @@ function keydown(ev){
         g_camera.rotateLeft(5);
     } else if (key == 'e'){
         g_camera.rotateRight(5);
+    } else if (key == 'ArrowUp') {
+        g_camera.moveUp(1);
+    } else if (key == 'ArrowDown') {
+        g_camera.moveDown(1);
     } else if (key == 't'){
         console.log(g_camera.eye.elements)
         
@@ -697,12 +725,18 @@ function keydown(ev){
     console.log(key);
 }
 
-function drawCube(M, color, textureNum=-2){
+function drawCube(M, color, textureNum=null){
     cube = new Cube();
     cube.matrix = new Matrix4(M);
     cube.color = color;
-    cube.textureNum = textureNum;
-    cube.renderFastUV();
+    if (textureNum != null){
+        cube.textureNum = textureNum;
+    }
+
+    if (g_normalOn){
+        cube.textureNum = -3
+    }
+    cube.render();
 }
 
 function drawCylinder(M, color){
@@ -724,28 +758,28 @@ var g_map = [
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
@@ -759,7 +793,7 @@ function drawMap(){
                 body.matrix.translate(0, -.75, 0);
                 // body.matrix.scale(.3, .3, .3);
                 body.matrix.translate(x-16, 0, y-16);
-                body.renderFastUV();
+                body.render();
             }
         }
     }
@@ -773,7 +807,7 @@ function drawMap(){
                 body.matrix.translate(0, -.75, 0);
                 // body.matrix.scale(.3, .3, .3);
                 body.matrix.translate(x-16, 1, y-16);
-                body.renderFastUV();
+                body.render();
             }
         }    
     }
@@ -787,7 +821,7 @@ function drawMap(){
                 body.matrix.translate(0, -.75, 0);
                 // body.matrix.scale(.3, .3, .3);
                 body.matrix.translate(x-16, 2, y-16);
-                body.renderFastUV();
+                body.render();
             }
         }    
     }
@@ -801,39 +835,39 @@ function drawMap(){
                 body.matrix.translate(0, -.75, 0);
                 // body.matrix.scale(.3, .3, .3);
                 body.matrix.translate(x-16, 3, y-16);
-                body.renderFastUV();
+                body.render();
             }
         }    
     }
 
-    // draw house
-    for (x=0; x<8; x++){
-        for (y=0; y<8; y++){
-            if(x == 0 || x == 7 || y == 7){
-                var body = new Cube();
-                body.color = [1,1,1,1];
-                body.textureNum = 2;
-                body.matrix.translate(0, -.75, 0);
-                // body.matrix.scale(.3, .3, .3);
-                body.matrix.translate(12 + x-16, 1, 13 + y-16);
-                body.renderFastUV();
-            }
-        }
-    }
+    // // draw house
+    // for (x=0; x<8; x++){
+    //     for (y=0; y<8; y++){
+    //         if(x == 0 || x == 7 || y == 7){
+    //             var body = new Cube();
+    //             body.color = [1,1,1,1];
+    //             body.textureNum = 2;
+    //             body.matrix.translate(0, -.75, 0);
+    //             // body.matrix.scale(.3, .3, .3);
+    //             body.matrix.translate(12 + x-16, 1, 13 + y-16);
+    //             body.render();
+    //         }
+    //     }
+    // }
 
-    for (x=0; x<8; x++){
-        for (y=0; y<8; y++){
-            // if(x == 0 || x == 7 || y == 7){
-            var body = new Cube();
-            body.color = [1,1,1,1];
-            body.textureNum = 3;
-            body.matrix.translate(0, -.75, 0);
-            // body.matrix.scale(.3, .3, .3);
-            body.matrix.translate(12 + x-16, 2, 13 + y-16);
-            body.renderFastUV();
-            // }
-        }
-    }
+    // for (x=0; x<8; x++){
+    //     for (y=0; y<8; y++){
+    //         // if(x == 0 || x == 7 || y == 7){
+    //         var body = new Cube();
+    //         body.color = [1,1,1,1];
+    //         body.textureNum = 3;
+    //         body.matrix.translate(0, -.75, 0);
+    //         // body.matrix.scale(.3, .3, .3);
+    //         body.matrix.translate(12 + x-16, 2, 13 + y-16);
+    //         body.render();
+    //         // }
+    //     }
+    // }
 }
 
 // function drawMap() {
@@ -887,6 +921,9 @@ function renderAllShapes(){
         globalRotMat = globalRotMat.rotate(g_globalAngleX, 0, 1, 0);
     }
     gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, globalRotMat.elements);
+
+    // Pass the light position to GLSL
+    gl.uniform3f(u_lightPos, g_lightPos[0], g_lightPos[1], g_lightPos[2]);
     
     // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -898,22 +935,39 @@ function renderAllShapes(){
     // Draw Floor
     var floor = new Cube();
     floor.color = [1,0,0,1];
-    floor.textureNum = 4;
+    floor.textureNum = -1;
     floor.matrix.translate(0, -.75, 0);
     floor.matrix.scale(30, 0, 30);
     floor.matrix.translate(-.5, 0, -.5);
-    floor.renderFastUV();
+    floor.render();
 
     // Draw the sky
     var sky = new Cube();
     sky.color = [1,0,0,1];
-    sky.textureNum = 1;
-    sky.matrix.scale(50, 50, 50);
+    sky.textureNum = 0;
+    if (g_normalOn) sky.textureNum = -3;
+    sky.matrix.scale(-50, -50, -50);
     sky.matrix.translate(-.5, -.5, -.5);
-    sky.renderFastUV();
+    sky.render();
 
     // Draw Map
     drawMap()
+
+
+    // Draw The Light
+    var light = new Cube();
+    light.color = [2, 2, 0, 1]
+    light.matrix.translate(g_lightPos[0], g_lightPos[1], g_lightPos[2]);
+    light.matrix.scale(.1, .1, .1);
+    light.matrix.translate(-.5, -.5, -.5);
+    light.render()
+
+    // draw test sphere
+    var test = new Sphere();
+    test.color = [1,0,0,1];
+    if(g_normalOn) test.textureNum = -3;
+    test.matrix.translate(1.5, 0.5, -0.5);
+    test.render();
 
     // Draw the body
     var body = new Matrix4();
@@ -921,7 +975,8 @@ function renderAllShapes(){
     var bodyTextureNum = 1;
 
     body.translate(-.20, -0.25, -0.5);
-    body.rotate(0, 1, 0, 0)
+    // body.rotate(0, 1, 0, 0);
+    body.rotate(180, 0, 1, 0);
 
     // special animation
     body.rotate(g_specialAngle1, 0, 1, 0);

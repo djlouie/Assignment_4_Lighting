@@ -1,7 +1,7 @@
 class Camera {
     constructor(){
-        this.eye = new Vector3({0: -12, 1: 0, 2: 6});
-        this.at = new Vector3({0: 39, 1: 0, 2: 5});
+        this.eye = new Vector3({0: 1, 1: 0, 2: 7});
+        this.at = new Vector3({0: 1, 1: 0, 2: -50});
         this.up = new Vector3({0: 0, 1: 1, 2: 0});
         this.fov = 40;
         this.collision_map = null;
@@ -47,6 +47,20 @@ class Camera {
     // calculate vector from at to eye
     backward(scalar=1) {
         var d = Vector3.sub(this.eye, this.at);
+        d.normalize().mul(scalar);
+        this.at.add(d);
+        this.eye.add(d);
+    }
+
+    moveUp(scalar=1) {
+        var d = new Vector3([0, 1, 0]);
+        d.normalize().mul(scalar);
+        this.at.add(d);
+        this.eye.add(d);
+    }
+
+    moveDown(scalar=1) {
+        var d = new Vector3([0, -1, 0]);
         d.normalize().mul(scalar);
         this.at.add(d);
         this.eye.add(d);

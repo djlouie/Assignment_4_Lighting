@@ -161,6 +161,80 @@ function drawTriangle3DUV(vertices, uv) {
     gl.drawArrays(gl.TRIANGLES, 0, n);
 }
 
+function drawTriangle3DUVNormal(vertices, uv, normals) {
+
+    var n = 3; // The number of vertices
+
+    // ----------
+    // --- Create a buffer object to target
+    // Create a buffer object
+    var vertexBuffer = gl.createBuffer();
+    if (!vertexBuffer) {
+        console.log('Failed to create the buffer object');
+        return -1;
+    }
+
+    // Bind the buffer object to target
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+    // Write data into the buffer object (make sure it is DYNAMIC_DRAW not STATIC_DRAW)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
+    
+    // Assign the buffer object to a_Position variable
+    gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
+
+    // Enable the assignment to a_Position variable
+    gl.enableVertexAttribArray(a_Position);
+
+    // ----------
+    // --- Create a buffer object for UV
+    // Create a buffer object
+    var uvBuffer = gl.createBuffer();
+    if (!uvBuffer) {
+        console.log('Failed to create the buffer object');
+        return -1;
+    }
+
+    // Bind the buffer object to target
+    gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+
+    // Write data into the buffer object (make sure it is DYNAMIC_DRAW not STATIC_DRAW)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uv), gl.DYNAMIC_DRAW);
+    
+    // Assign the buffer object to a_UV variable
+    gl.vertexAttribPointer(a_UV, 2, gl.FLOAT, false, 0, 0);
+
+    // Enable the assignment to a_Position variable
+    gl.enableVertexAttribArray(a_UV);
+
+    // ----------
+    // --- Create a buffer object for Normals
+    // Create a buffer object
+    var normalBuffer = gl.createBuffer();
+    if (!normalBuffer) {
+        console.log('Failed to create the buffer object');
+        return -1;
+    }
+
+    // Bind the buffer object to target
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+
+    // Write data into the buffer object (make sure it is DYNAMIC_DRAW not STATIC_DRAW)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.DYNAMIC_DRAW);
+    
+    // Assign the buffer object to a_Normal variable
+    gl.vertexAttribPointer(a_Normal, 3, gl.FLOAT, false, 0, 0);
+
+    // Enable the assignment to a_Position variable
+    gl.enableVertexAttribArray(a_Normal);
+
+    // ----------
+    // --- Draw the triangle
+    gl.drawArrays(gl.TRIANGLES, 0, n);
+
+    g_vertexBuffer = null;
+}
+
 function drawTriangle3DUVFast(vertices, uv) {
 
     var n = vertices.length / 3; // The number of vertices

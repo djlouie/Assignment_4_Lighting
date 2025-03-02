@@ -15,6 +15,21 @@
         </canvas>
 
         <p>
+            Lighting:
+        </p>
+
+        <div>
+            <button type="button" id="normalOn">NormalOn</button>
+            <button type="button" id="normalOff">NormalOff</button>    
+        </div>
+
+        <div>
+            Light X <input type="range" min="-250" max="250" value="0" class="slider" id="lightX">
+            Light Y <input type="range" min="-250" max="250" value="100" class="slider" id="lightY">
+            Light Z <input type="range" min="-250" max="250" value="-200" class="slider" id="lightZ">
+        </div>
+
+        <p>
             Perspective Camera:
         </p>
         <div>
@@ -52,27 +67,6 @@
         <p>
             <b>Polish Coffee Cow</b>
         </p>
-
-        <!-- <p>
-            Drawing Mode:
-        </p>
-
-        <div>
-            <button type="button" id="pointButton">Point</button>
-            <button type="button" id="triButton">Triangle</button>
-            <button type="button" id="circleButton">Circle</button>
-            <button type="button" id="trexButton">T-Rex</button>
-        </div>
-
-        <p>
-            Shape Color:
-        </p>
-
-        <div>
-            Red <input type="range" min="0" max="100" value="100" class="slider" id="redSlide">
-            Green <input type="range" min="0" max="100" value="100" class="slider" id="greenSlide">
-            Blue <input type="range" min="0" max="100" value="100" class="slider" id="blueSlide">
-        </div> -->
 
         <div>
             Head <input type="range" min="-45" max="45" value="0" class="slider" id="magentaSlide">
@@ -170,6 +164,7 @@
         <script src="Camera.js"></script>
         <script src="Triangle.js"></script>
         <script src="Cube.js"></script>
+        <script src="Sphere.js"></script>
         <script src="Cylinder.js"></script>
         <script src="stats.min.js"></script>
         <script src="Lighting.js"></script>
