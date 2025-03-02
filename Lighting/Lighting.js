@@ -36,6 +36,7 @@ var FSHADER_SOURCE = `
     uniform int u_WhichTexture;
     uniform vec3 u_lightPos;
     uniform vec3 u_cameraPos;
+    uniform bool u_lightOn;
     varying vec4 v_VertPos;
     void main() {
         
@@ -84,11 +85,18 @@ var FSHADER_SOURCE = `
         vec3 E = normalize(u_cameraPos - vec3(v_VertPos));
 
         // Specular
-        float specular = pow(max(dot(E,R), 0.0), 10.0);
+        float specular = pow(max(dot(E,R), 0.0), 64.0) * 0.8;
 
-        vec3 diffuse = vec3(gl_FragColor) * nDotL * 0.7;
-        vec3 ambient = vec3(gl_FragColor) * 0.3;
-        gl_FragColor = vec4(specular + diffuse + ambient, 1.0);
+        vec3 diffuse = vec3(1,1,0.9) * vec3(gl_FragColor) * nDotL * 0.7;
+        vec3 ambient = vec3(gl_FragColor) * 0.2;
+
+        if (u_lightOn) {
+            if(u_WhichTexture == 0) {
+                gl_FragColor = vec4(specular + diffuse + ambient, 1.0);
+            } else {
+                 gl_FragColor = vec4(diffuse + ambient, 1.0);   
+            }
+        }
     }`;
 
 // Global Variables
@@ -111,6 +119,7 @@ let u_Sampler4;
 let u_WhichTexture;
 let u_lightPos;
 let u_cameraPos;
+let u_lightOn;
 
 // Setup GL context
 function setupWebGL(){
@@ -189,6 +198,13 @@ function connectVariablesToGLSL(){
     u_cameraPos = gl.getUniformLocation(gl.program, 'u_cameraPos');
     if (!u_cameraPos) {
         console.log('Failed to get the storage location of u_cameraPos');
+        return;
+    }
+
+    // Get the storage location of u_lightOn
+    u_lightOn = gl.getUniformLocation(gl.program, 'u_lightOn');
+    if (!u_lightOn) {
+        console.log('Failed to get the storage location of u_lightOn');
         return;
     }
 
@@ -296,6 +312,7 @@ let g_udderAnimation = false;
 let g_aspectScalar = 1;
 let g_mouseRotationScalar = 1;
 let g_normalOn = false;
+let g_lightOn = true;
 let g_lightPos = [0,1,-2];
 
 // Set up actions for the HTML UI elements
@@ -310,6 +327,8 @@ function addActionsForHtmlUI(){
     // Button Events
     document.getElementById('normalOn').onclick = function() {g_normalOn=true};
     document.getElementById('normalOff').onclick = function() {g_normalOn=false};
+    document.getElementById('lightOn').onclick = function() {g_lightOn=true};
+    document.getElementById('lightOff').onclick = function() {g_lightOn=false};
     document.getElementById('animationYellowOffButton').onclick = function() {g_yellowAnimation=false;};
     document.getElementById('animationYellowOnButton').onclick = function() {g_yellowAnimation=true;};
     document.getElementById('animationMagentaOffButton').onclick = function() {g_magentaAnimation=false;};
@@ -1012,6 +1031,8 @@ function renderAllShapes(){
 
     // Pass the light position to GLSL
     gl.uniform3f(u_cameraPos, g_camera.eye.elements[0], g_camera.eye.elements[1], g_camera.eye.elements[2]);
+
+    gl.uniform1i(u_lightOn, g_lightOn);
     
     // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
