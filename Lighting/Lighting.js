@@ -855,7 +855,7 @@ function updateAnimationAngles() {
     if (g_spotLightAnimation) {
         g_spotLightAt[0] = -1 * 2 * Math.cos(g_seconds);
         g_spotLightAt[2] = -1 * Math.cos(4 * g_seconds);
-        g_spotLightAngle = 90 * Math.sin(2 * g_seconds)
+        g_spotLightAngle = 90 * Math.sin(2 * g_seconds) + 45;
         document.getElementById('spotLightX').value = g_spotLightAt[0] * 100;
         document.getElementById('spotLightZ').value = g_spotLightAt[2] * 100;
         document.getElementById('spotLightAngle').value = g_spotLightAngle;
