@@ -377,7 +377,7 @@ let g_lightPos = [0,1,-2];
 let g_spotLightAt = [0,0,0];
 let g_spotLightOn = false;
 let g_spotLightAngle = 45;
-let g_lightAnimation = false;
+let g_lightAnimation = true;
 
 // Set up actions for the HTML UI elements
 function addActionsForHtmlUI(){
