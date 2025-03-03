@@ -388,6 +388,7 @@ let g_spotLightAt = [0,0,0];
 let g_spotLightOn = false;
 let g_spotLightAngle = 45;
 let g_lightAnimation = true;
+let g_spotLightAnimation = false;
 
 // Set up actions for the HTML UI elements
 function addActionsForHtmlUI(){
@@ -406,7 +407,9 @@ function addActionsForHtmlUI(){
     document.getElementById('spotLightOn').onclick = function() {g_lightOn=true; g_spotLightOn=true};
     document.getElementById('spotLightOff').onclick = function() {g_spotLightOn=false};
     document.getElementById('lightAutoMovementOn').onclick = function() {g_lightAnimation=true};
-    document.getElementById('lightAutoMovementOff').onclick = function() {g_lightAnimation=false};
+    document.getElementById('lightAutoMovementOff').onclick = function() {g_lightAnimation=false}
+    document.getElementById('spotLightAutoMovementOn').onclick = function() {g_lightAnimation=true; g_spotLightAnimation=true; g_spotLightOn=true;};
+    document.getElementById('spotLightAutoMovementOff').onclick = function() {g_spotLightAnimation=false};
     document.getElementById('animationYellowOffButton').onclick = function() {g_yellowAnimation=false;};
     document.getElementById('animationYellowOnButton').onclick = function() {g_yellowAnimation=true;};
     document.getElementById('animationMagentaOffButton').onclick = function() {g_magentaAnimation=false;};
@@ -847,6 +850,15 @@ function updateAnimationAngles() {
         document.getElementById('lightX').value = g_lightPos[0] * 100;
         document.getElementById('lightY').value = g_lightPos[1] * 100;
         document.getElementById('lightZ').value = g_lightPos[2] * 100;
+    }
+
+    if (g_spotLightAnimation) {
+        g_spotLightAt[0] = -1 * 2 * Math.cos(g_seconds);
+        g_spotLightAt[2] = -1 * Math.cos(4 * g_seconds);
+        g_spotLightAngle = 90 * Math.sin(2 * g_seconds)
+        document.getElementById('spotLightX').value = g_spotLightAt[0] * 100;
+        document.getElementById('spotLightZ').value = g_spotLightAt[2] * 100;
+        document.getElementById('spotLightAngle').value = g_spotLightAngle;
     }
     
 }
