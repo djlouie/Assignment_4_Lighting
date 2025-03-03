@@ -844,9 +844,9 @@ function updateAnimationAngles() {
     }
 
     if (g_lightAnimation) {
-        g_lightPos[0] = 2 * Math.cos(g_seconds);
-        g_lightPos[1] = Math.cos(4 * g_seconds) + 2;
-        g_lightPos[2] = Math.cos(4 * g_seconds) - 2;
+        g_lightPos[0] = 2.5 * Math.cos(g_seconds);
+        g_lightPos[1] = 2 * Math.cos(5 * g_seconds) + 3;
+        g_lightPos[2] = 2 * Math.cos(3 * g_seconds);
         document.getElementById('lightX').value = g_lightPos[0] * 100;
         document.getElementById('lightY').value = g_lightPos[1] * 100;
         document.getElementById('lightZ').value = g_lightPos[2] * 100;
