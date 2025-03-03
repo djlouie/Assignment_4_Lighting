@@ -43,6 +43,7 @@ var FSHADER_SOURCE = `
     uniform float u_spotLightAngle;
     uniform bool u_lightOn;
     uniform bool u_spotLightOn;
+    uniform bool u_lightAroundSpotLight;
     varying vec4 v_VertPos;
     void main() {
         
@@ -102,13 +103,30 @@ var FSHADER_SOURCE = `
 
         if (u_lightOn) {
             if (u_spotLightOn){
-                if (dot(w,ds) <= cos(u_spotLightAngle)){
-                    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-                } else {
-                    if(u_WhichTexture <= 0) {
-                        gl_FragColor = vec4(specular + diffuse + ambient, 1.0);
+
+                if(u_lightAroundSpotLight){
+                    if (dot(w,ds) <= cos(u_spotLightAngle)){
+                        if(u_WhichTexture <= 0) {
+                            gl_FragColor = vec4( (specular + diffuse + ambient) * 0.2, 1.0);
+                        } else {
+                            gl_FragColor = vec4( (diffuse + ambient) * 0.2 , 1.0);
+                        }
                     } else {
-                        gl_FragColor = vec4(diffuse + ambient, 1.0);
+                        if(u_WhichTexture <= 0) {
+                            gl_FragColor = vec4(specular + diffuse + ambient, 1.0);
+                        } else {
+                            gl_FragColor = vec4(diffuse + ambient, 1.0);
+                        }
+                    }
+                } else {
+                    if (dot(w,ds) <= cos(u_spotLightAngle)){
+                        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+                    } else {
+                        if(u_WhichTexture <= 0) {
+                            gl_FragColor = vec4(specular + diffuse + ambient, 1.0);
+                        } else {
+                            gl_FragColor = vec4(diffuse + ambient, 1.0);
+                        }
                     }
                 }
 
@@ -155,6 +173,7 @@ let u_spotLightAngle;
 let u_cameraPos;
 let u_lightOn;
 let u_lightColor;
+let u_lightAroundSpotLight;
 
 // Setup GL context
 function setupWebGL(){
@@ -240,6 +259,13 @@ function connectVariablesToGLSL(){
     u_spotLightOn = gl.getUniformLocation(gl.program, 'u_spotLightOn');
     if (!u_spotLightOn) {
         console.log('Failed to get the storage location of u_spotLightOn');
+        return;
+    }
+
+    // Get the storage location of u_lightAroundSpotLight
+    u_lightAroundSpotLight = gl.getUniformLocation(gl.program, 'u_lightAroundSpotLight');
+    if (!u_lightAroundSpotLight) {
+        console.log('Failed to get the storage location of u_lightAroundSpotLight');
         return;
     }
 
@@ -389,6 +415,7 @@ let g_spotLightOn = false;
 let g_spotLightAngle = 45;
 let g_lightAnimation = true;
 let g_spotLightAnimation = false;
+let g_lightAroundSpotLight = false;
 
 // Set up actions for the HTML UI elements
 function addActionsForHtmlUI(){
@@ -406,6 +433,8 @@ function addActionsForHtmlUI(){
     document.getElementById('lightOff').onclick = function() {g_lightOn=false};
     document.getElementById('spotLightOn').onclick = function() {g_lightOn=true; g_spotLightOn=true};
     document.getElementById('spotLightOff').onclick = function() {g_spotLightOn=false};
+    document.getElementById('lightAroundSpotLightOn').onclick = function() {g_lightAroundSpotLight=true};
+    document.getElementById('lightAroundSpotLightOff').onclick = function() {g_lightAroundSpotLight=false};
     document.getElementById('lightAutoMovementOn').onclick = function() {g_lightAnimation=true};
     document.getElementById('lightAutoMovementOff').onclick = function() {g_lightAnimation=false}
     document.getElementById('spotLightAutoMovementOn').onclick = function() {g_lightAnimation=true; g_spotLightAnimation=true; g_spotLightOn=true;};
@@ -1179,6 +1208,8 @@ function renderAllShapes(){
     gl.uniform1i(u_lightOn, g_lightOn);
 
     gl.uniform1i(u_spotLightOn, g_spotLightOn);
+
+    gl.uniform1i(u_lightAroundSpotLight, g_lightAroundSpotLight);
 
     gl.uniform1f(u_spotLightAngle, degreesToRadians(g_spotLightAngle));
     
