@@ -6,7 +6,7 @@
     </head>
 
     <body onload="main()">
-        <canvas id="webgl" width="500" height="500">
+        <canvas id="webgl" width="1024" height="576">
         Please use a browser that supports "canvas"
         </canvas>
 
@@ -29,9 +29,52 @@
         </div>
 
         <div>
+            <button type="button" id="lightAutoMovementOn">Light Auto Movement On</button>
+            <button type="button" id="lightAutoMovementOff">Light Auto Movement Off</button>    
+        </div>
+
+        <div>
             Light X <input type="range" min="-250" max="250" value="0" class="slider" id="lightX">
             Light Y <input type="range" min="-250" max="250" value="100" class="slider" id="lightY">
             Light Z <input type="range" min="-250" max="250" value="-200" class="slider" id="lightZ">
+        </div>
+
+        <div>
+            Light Color!
+            Light Red <input type="range" min="0" max="255" value="255" class="slider" id="lightR">
+            Light Green <input type="range" min="0" max="255" value="255" class="slider" id="lightG">
+            Light Blue <input type="range" min="0" max="255" value="255" class="slider" id="lightB">
+            <!-- Color Alpha <input type="range" min="0" max="1" value="0.5" step="0.01" class="slider" id="lightA"> -->
+        </div>
+
+        <div>
+            <canvas id="colorCanvas" width="300" height="50">
+                Please use a browser that supports "canvas"
+            </canvas>
+        
+            <style>
+                #colorCanvas {
+                    border: 2px solid black;
+                }
+            </style>
+        </div>
+
+        <div>
+            <div>
+                Spot Light!
+            </div>
+            <div>
+                <button type="button" id="spotLightOn">Spotlight On</button>
+                <button type="button" id="spotLightOff">Spotlight Off</button>  
+            </div>
+            <div>
+                Spot Light Angle <input type="range" min="0" max="90" value="45" class="slider" id="spotLightAngle">
+            </div>
+            <div>
+                Spot Light At X <input type="range" min="-250" max="250" value="0" class="slider" id="spotLightX">
+                Spot Light At Y <input type="range" min="-250" max="250" value="0" class="slider" id="spotLightY">
+                Spot Light At Z <input type="range" min="-250" max="250" value="0" class="slider" id="spotLightZ">
+            </div>
         </div>
 
         <p>
@@ -61,7 +104,7 @@
         </p>
 
         <p>
-            WASD To Move. QE To rotate left and right. T to break a block that is blocking you.
+            WASD To Move. QE To rotate left and right. T to break a block that is blocking you. Up Arrow and Down Arrow for up and down.
             To break a block for sure, get inside of it and hit T: the collision on forward isn't perfectly callibrated to the outside of the boxes.
             Breaking the wall blocks makes it very noticeable.
             Collision only works on forward, so you can use side ways to clip through walls.
@@ -74,7 +117,7 @@
         </p>
 
         <div>
-            Head <input type="range" min="-45" max="45" value="0" class="slider" id="magentaSlide">
+            Head <input type="range" min="-45" max="45" value="0" class="slider" id="headSlide">
         </div>
 
         <div>
@@ -84,7 +127,7 @@
         </div>
 
         <div>
-            Nose <input type="range" min="-20" max="20" value="0" class="slider" id="yellowSlide">
+            Nose <input type="range" min="-20" max="20" value="0" class="slider" id="noseSlide">
         </div>
 
         <div>

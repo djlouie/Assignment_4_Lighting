@@ -74,10 +74,11 @@ function drawTriangle3D(vertices) {
     // n = 3;
     var n = vertices.length / 3;
 
-    console.log("VERTICES LENGTH", vertices.length)
-    console.log("n:", n);
+    // console.log("VERTICES LENGTH", vertices.length)
+    // console.log("n:", n);
 
     if (vertices.length % 3 !== 0) {
+        console.log("VERTICES ERROR:" + vertices);
         console.error("Error: vertices array length must be a multiple of 3.");
         return;
     }
