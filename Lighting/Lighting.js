@@ -842,9 +842,11 @@ function updateAnimationAngles() {
 
     if (g_lightAnimation) {
         g_lightPos[0] = 2 * Math.cos(g_seconds);
-        g_lightPos[1] = Math.cos(4 * g_seconds) + 3;
+        g_lightPos[1] = Math.cos(4 * g_seconds) + 2;
+        g_lightPos[2] = Math.cos(4 * g_seconds) - 2;
         document.getElementById('lightX').value = g_lightPos[0] * 100;
         document.getElementById('lightY').value = g_lightPos[1] * 100;
+        document.getElementById('lightZ').value = g_lightPos[2] * 100;
     }
     
 }
@@ -1224,7 +1226,7 @@ function renderAllShapes(){
     // draw test Cylinder
     var test = new Cylinder();
     test.color = [1,0,0,1];
-    test.textureNum = 0
+    test.textureNum = -2
     if(g_normalOn) test.textureNum = -3;
     test.matrix.translate(-2, 0, -0.5);
     test.render();
