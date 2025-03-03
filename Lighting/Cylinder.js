@@ -3,6 +3,7 @@ class Cylinder{
         this.type = 'cylinder';
         this.color = [1.0, 1.0, 1.0, 1.0];
         this.matrix = new Matrix4();
+        this.normalMatrix = new Matrix4();
         this.segments = 10;
         this.textureNum = -2;
     }
@@ -120,6 +121,7 @@ class Cylinder{
             let vec3 = Vector3.cross(vec1, vec2);
         
             vec3.normalize();
+            vec3.mul(-1);
 
             // return same normal for all 3 vertices
             let verticesNormals = []
@@ -195,6 +197,9 @@ class Cylinder{
         
         // Pass the matrix to u_ModelMatrix attribute
         gl.uniformMatrix4fv(u_ModelMatrix, false, this.matrix.elements);
+
+        // Pass the matrix to u_NormalMatrix attribute
+        gl.uniformMatrix4fv(u_NormalMatrix, false, this.normalMatrix.elements);
 
         this.generateVertices()
 

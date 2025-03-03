@@ -6,6 +6,7 @@ class Cube{
         // this.size = 5.0;
         // this.segments = 10;
         this.matrix = new Matrix4();
+        this.normalMatrix = new Matrix4();
         this.textureNum = -2;
     }
 
@@ -23,6 +24,9 @@ class Cube{
         
         // Pass the matrix to u_ModelMatrix attribute
         gl.uniformMatrix4fv(u_ModelMatrix, false, this.matrix.elements);
+
+        // Pass the matrix to u_NormalMatrix attribute
+        gl.uniformMatrix4fv(u_NormalMatrix, false, this.normalMatrix.elements);
 
         // Front of Cube
         drawTriangle3DUVNormal( [0, 0, 0,  1, 1, 0,  1, 0, 0], [0,0, 1,1, 1,0], [0,0,-1,  0,0,-1,  0,0,-1] );

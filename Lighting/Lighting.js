@@ -10,13 +10,15 @@ var VSHADER_SOURCE = `
     varying vec3 v_Normal;
     varying vec4 v_VertPos;
     uniform mat4 u_ModelMatrix;
+    uniform mat4 u_NormalMatrix;
     uniform mat4 u_GlobalRotateMatrix;
     uniform mat4 u_ViewMatrix;
     uniform mat4 u_ProjectionMatrix;
     void main() {
         gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_GlobalRotateMatrix * u_ModelMatrix * a_Position;
         v_UV = a_UV;
-        v_Normal = a_Normal;
+        v_Normal = normalize(vec3(u_NormalMatrix * vec4(a_Normal, 1)));
+        // v_Normal = a_Normal;
         v_VertPos = u_ModelMatrix * a_Position;
     }`;
 
@@ -103,7 +105,7 @@ var FSHADER_SOURCE = `
                 if (dot(w,ds) <= cos(u_spotLightAngle)){
                     gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
                 } else {
-                    if(u_WhichTexture > 1) {
+                    if(u_WhichTexture <= 0) {
                         gl_FragColor = vec4(specular + diffuse + ambient, 1.0);
                     } else {
                         gl_FragColor = vec4(diffuse + ambient, 1.0);
@@ -118,7 +120,7 @@ var FSHADER_SOURCE = `
                 //     gl_FragColor = vec4(diffuse + ambient, 1.0) * max(dot(w,ds), 0.0);
                 // }
             } else {
-                if(u_WhichTexture == 0) {
+                if(u_WhichTexture <= 0) {
                     gl_FragColor = vec4(specular + diffuse + ambient, 1.0);
                 } else {
                     gl_FragColor = vec4(diffuse + ambient, 1.0);
@@ -139,6 +141,7 @@ let u_ModelMatrix;
 let u_GlobalRotateMatrix;
 let u_ViewMatrix;
 let u_ProjectionMatrix;
+let u_NormalMatrix;
 let u_Sampler0;
 let u_Sampler1;
 let u_Sampler2;
@@ -292,6 +295,13 @@ function connectVariablesToGLSL(){
     u_ViewMatrix = gl.getUniformLocation(gl.program, 'u_ViewMatrix');
     if (!u_ViewMatrix) {
         console.log('Failed to get the storage location of u_ViewMatrix');
+        return;
+    }
+
+    // Get the storage location of u_NormalMatrix
+    u_NormalMatrix = gl.getUniformLocation(gl.program, 'u_NormalMatrix');
+    if (!u_NormalMatrix) {
+        console.log('Failed to get the storage location of u_NormalMatrix');
         return;
     }
 
@@ -895,6 +905,7 @@ function keydown(ev){
 function drawCube(M, color, textureNum=null){
     cube = new Cube();
     cube.matrix = new Matrix4(M);
+    cube.normalMatrix.setInverseOf(cube.matrix).transpose();
     cube.color = color;
     if (textureNum != null){
         cube.textureNum = textureNum;
@@ -909,6 +920,7 @@ function drawCube(M, color, textureNum=null){
 function drawCylinder(M, color, textureNum=null){
     cylinder = new Cylinder();
     cylinder.matrix = new Matrix4(M);
+    cylinder.normalMatrix.setInverseOf(cylinder.matrix).transpose();
     cylinder.color = color;
     if (textureNum != null){
         cylinder.textureNum = textureNum;
@@ -1207,6 +1219,14 @@ function renderAllShapes(){
     test.textureNum = 0
     if(g_normalOn) test.textureNum = -3;
     test.matrix.translate(1.5, 0.5, -0.5);
+    test.render();
+
+    // draw test Cylinder
+    var test = new Cylinder();
+    test.color = [1,0,0,1];
+    test.textureNum = 0
+    if(g_normalOn) test.textureNum = -3;
+    test.matrix.translate(-2, 0, -0.5);
     test.render();
 
     // Draw the body
